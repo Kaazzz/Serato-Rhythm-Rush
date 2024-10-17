@@ -2,94 +2,101 @@ import pygame
 import random
 import time
 
-# Initialize pygame and mixer for audio
+
 pygame.init()
 pygame.mixer.init()
 
-# Screen dimensions
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Disco DJ Button Sequence")
 
-# Colors
+#colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-# Load images
-background_image = pygame.image.load('assets/disco.png')  # Load your background image
-dj_image = pygame.image.load('assets/seratoDJ.png')  # You can replace this with any image you want
+#load sprites and images
+title_image = pygame.image.load('assets/title.png')
+background_image = pygame.image.load('assets/disco.png')
+dj_image = pygame.image.load('assets/seratoDJ.png')
 z_button_image = pygame.image.load('assets/z_but.png')
 x_button_image = pygame.image.load('assets/x_but.png')
 c_button_image = pygame.image.load('assets/c_but.png')
 
-# Resize images
-background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))  # Scale background to fit the screen
+#load sound effects
+beat_sound = pygame.mixer.Sound('assets/beat.mp3')
+press_sound = pygame.mixer.Sound('assets/fx.mp3')
+
+#scale assets
+title_image = pygame.transform.scale(title_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))
 dj_image = pygame.transform.scale(dj_image, (300, 300))
 z_button_image = pygame.transform.scale(z_button_image, (200, 200))
 x_button_image = pygame.transform.scale(x_button_image, (200, 200))
 c_button_image = pygame.transform.scale(c_button_image, (200, 200))
 
-# Game clock
+
 clock = pygame.time.Clock()
 
-# Button positions on the screen
+
 button_positions = {
     'z': (130, 390),
     'x': (310, 390),
     'c': (480, 390)
 }
 
-# Fonts
+#py font
 font = pygame.font.SysFont(None, 55)
 
-# Load background music
-pygame.mixer.music.load('assets/bgm.mp3')  # Replace with your own file
-pygame.mixer.music.play(-1)  # Play indefinitely
+#load music
+pygame.mixer.music.load('assets/bgm.mp3')
+pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.play(-1)
 
-# DJ's x-axis movement range for "dancing" (center area)
-dj_x_min = 150  # Left bound of the center area
-dj_x_max = 350  # Right bound of the center area
-dj_x_position = 260  # Initial x-position for DJ (center)
+#set sir serato's dancing area
+dj_x_min = 150
+dj_x_max = 350
+dj_x_position = 260
 
-# Timer for DJ movement to slow down the movement
 dj_move_timer = 0
-dj_move_interval = 700  # Time in milliseconds between moves (0.7 seconds)
+dj_move_interval = 700
 
-# Score initialization
+
 score = 0
 
-# Display the sequence of buttons pressed by the DJ
+#sequence display
 def show_sequence(sequence):
     global dj_x_position, dj_move_timer
 
-    # Display each button press symbol with delay
+    #display button sequence for every start of round
     for btn in sequence:
-        screen.blit(background_image, (0, 0))  # Draw the background
+        screen.blit(background_image, (0, 0))
 
-        # Draw the score in the top right corner
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (SCREEN_WIDTH - 200, 20))
 
-        # Move DJ to a new random x position based on the beat timer
+        #make serato dance
         if pygame.time.get_ticks() - dj_move_timer > dj_move_interval:
             dj_x_position = random.randint(dj_x_min, dj_x_max)
-            dj_move_timer = pygame.time.get_ticks()  # Reset the move timer
+            dj_move_timer = pygame.time.get_ticks()
 
         screen.blit(dj_image, (dj_x_position, 80))
 
-        # Show the button currently being pressed
+        #button sound on press mechanic
         if btn == 'z':
             screen.blit(z_button_image, button_positions['z'])
+            beat_sound.play()
         elif btn == 'x':
             screen.blit(x_button_image, button_positions['x'])
+            beat_sound.play()
         elif btn == 'c':
             screen.blit(c_button_image, button_positions['c'])
+            beat_sound.play()
 
         pygame.display.update()
-        pygame.time.wait(700)  # 0.7 seconds between button presses
+        pygame.time.wait(700)
 
-    # Short delay after showing the full sequence
+
     pygame.time.wait(500)
 
 
@@ -97,7 +104,7 @@ def check_player_input(sequence, player_input):
     return sequence == player_input
 
 
-# Main game loop
+#main game loop
 def game_loop():
     global dj_x_position, dj_move_timer, score
     running = True
@@ -107,27 +114,32 @@ def game_loop():
     show_message = False
     message_text = ""
 
-    while running:
-        screen.blit(background_image, (0, 0))  # Draw the background
+    #title screen display
+    screen.blit(title_image, (0, 0))
+    pygame.display.update()
+    pygame.time.wait(5000)
 
-        # Move DJ to a new random x position based on the beat timer
+    while running:
+        screen.blit(background_image, (0, 0))
+
+        #move serato to a random position on the dance floor
         if pygame.time.get_ticks() - dj_move_timer > dj_move_interval:
             dj_x_position = random.randint(dj_x_min, dj_x_max)
-            dj_move_timer = pygame.time.get_ticks()  # Reset the move timer
+            dj_move_timer = pygame.time.get_ticks()
 
-        # Draw the score in the top right corner
+
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (SCREEN_WIDTH - 200, 20))
 
-        # Display the DJ in the new position
+
         screen.blit(dj_image, (dj_x_position, 80))
 
-        # Draw the buttons
+        #draw buttons on screem
         screen.blit(z_button_image, button_positions['z'])
         screen.blit(x_button_image, button_positions['x'])
         screen.blit(c_button_image, button_positions['c'])
 
-        # Check events
+        #event checker
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -136,43 +148,46 @@ def game_loop():
                 if round_active:
                     if event.key == pygame.K_z:
                         player_sequence.append('z')
+                        press_sound.play()
                     elif event.key == pygame.K_x:
                         player_sequence.append('x')
+                        press_sound.play()
                     elif event.key == pygame.K_c:
                         player_sequence.append('c')
+                        press_sound.play()
 
-                    # Once the player's sequence length matches the DJ's, check it
+                    #check if players sequence matches
                     if len(player_sequence) == len(dj_sequence):
                         if check_player_input(dj_sequence, player_sequence):
                             show_message = True
                             message_text = "Correct!"
-                            score += 1  # Increment score on correct input
+                            score += 1
                         else:
                             show_message = True
                             message_text = "Wrong!"
                         round_active = False
 
-        # If not in an active round, generate new DJ sequence
+        #serato dance
         if not round_active and not show_message:
             dj_sequence = [random.choice(['z', 'x', 'c']) for _ in range(3)]
             show_sequence(dj_sequence)
             player_sequence = []
             round_active = True
 
-        # Show the result of the round in the bottom left
+        #game update result
         if show_message:
             text_surface = font.render(message_text, True, WHITE)
             screen.blit(text_surface, (20, SCREEN_HEIGHT - 50))
             pygame.display.update()
-            pygame.time.wait(2000)  # Pause for 2 seconds
+            pygame.time.wait(2000)
             show_message = False
 
-        # Update the screen
+
         pygame.display.update()
         clock.tick(30)
 
     pygame.quit()
 
 
-# Start the game
+#start
 game_loop()
