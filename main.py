@@ -16,13 +16,15 @@ pygame.display.set_caption("Disco DJ Button Sequence")
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-# Load DJ and button images
+# Load images
+background_image = pygame.image.load('assets/disco.png')  # Load your background image
 dj_image = pygame.image.load('assets/seratoDJ.png')  # You can replace this with any image you want
 z_button_image = pygame.image.load('assets/z_but.png')
 x_button_image = pygame.image.load('assets/x_but.png')
 c_button_image = pygame.image.load('assets/c_but.png')
 
 # Resize images
+background_image = pygame.transform.scale(background_image, (SCREEN_WIDTH, SCREEN_HEIGHT))  # Scale background to fit the screen
 dj_image = pygame.transform.scale(dj_image, (300, 300))
 z_button_image = pygame.transform.scale(z_button_image, (200, 200))
 x_button_image = pygame.transform.scale(x_button_image, (200, 200))
@@ -63,7 +65,7 @@ def show_sequence(sequence):
 
     # Display each button press symbol with delay
     for btn in sequence:
-        screen.fill(BLACK)
+        screen.blit(background_image, (0, 0))  # Draw the background
 
         # Draw the score in the top right corner
         score_text = font.render(f"Score: {score}", True, WHITE)
@@ -74,7 +76,7 @@ def show_sequence(sequence):
             dj_x_position = random.randint(dj_x_min, dj_x_max)
             dj_move_timer = pygame.time.get_ticks()  # Reset the move timer
 
-        screen.blit(dj_image, (dj_x_position, 50))
+        screen.blit(dj_image, (dj_x_position, 80))
 
         # Show the button currently being pressed
         if btn == 'z':
@@ -106,7 +108,7 @@ def game_loop():
     message_text = ""
 
     while running:
-        screen.fill(BLACK)
+        screen.blit(background_image, (0, 0))  # Draw the background
 
         # Move DJ to a new random x position based on the beat timer
         if pygame.time.get_ticks() - dj_move_timer > dj_move_interval:
@@ -118,7 +120,7 @@ def game_loop():
         screen.blit(score_text, (SCREEN_WIDTH - 200, 20))
 
         # Display the DJ in the new position
-        screen.blit(dj_image, (dj_x_position, 50))
+        screen.blit(dj_image, (dj_x_position, 80))
 
         # Draw the buttons
         screen.blit(z_button_image, button_positions['z'])
