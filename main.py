@@ -9,7 +9,7 @@ pygame.mixer.init()
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Disco DJ Button Sequence")
+pygame.display.set_caption("Disco DJ Button Sequence FSM")
 
 #colors
 BLACK = (0, 0, 0)
@@ -64,25 +64,30 @@ dj_move_interval = 700
 
 score = 0
 
+# FSM States
+GAME_START = 0
+FIRST_CHECK = 1
+SECOND_CHECK = 2
+THIRD_CHECK = 3
+ROUND_SUCCESS = 4
+GAME_OVER = 5
+
 #sequence display
 def show_sequence(sequence):
     global dj_x_position, dj_move_timer
 
-    #display button sequence for every start of round
     for btn in sequence:
         screen.blit(background_image, (0, 0))
 
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (SCREEN_WIDTH - 200, 20))
 
-        #make serato dance
         if pygame.time.get_ticks() - dj_move_timer > dj_move_interval:
             dj_x_position = random.randint(dj_x_min, dj_x_max)
             dj_move_timer = pygame.time.get_ticks()
 
         screen.blit(dj_image, (dj_x_position, 80))
 
-        #button sound on press mechanic
         if btn == 'z':
             screen.blit(z_button_image, button_positions['z'])
             beat_sound.play()
@@ -96,85 +101,110 @@ def show_sequence(sequence):
         pygame.display.update()
         pygame.time.wait(700)
 
-
     pygame.time.wait(500)
 
-
-def check_player_input(sequence, player_input):
-    return sequence == player_input
-
-
-#main game loop
+#FSM based key press checks
 def game_loop():
     global dj_x_position, dj_move_timer, score
     running = True
     dj_sequence = []
-    player_sequence = []
-    round_active = False
-    show_message = False
+    player_input = None
+    current_check = GAME_START
+    index = 0
     message_text = ""
+    show_message = False
 
     #title screen display
     screen.blit(title_image, (0, 0))
     pygame.display.update()
-    pygame.time.wait(5000)
+    pygame.time.wait(3000)
 
     while running:
         screen.blit(background_image, (0, 0))
 
-        #move serato to a random position on the dance floor
         if pygame.time.get_ticks() - dj_move_timer > dj_move_interval:
             dj_x_position = random.randint(dj_x_min, dj_x_max)
             dj_move_timer = pygame.time.get_ticks()
 
-
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (SCREEN_WIDTH - 200, 20))
-
-
         screen.blit(dj_image, (dj_x_position, 80))
-
-        #draw buttons on screem
         screen.blit(z_button_image, button_positions['z'])
         screen.blit(x_button_image, button_positions['x'])
         screen.blit(c_button_image, button_positions['c'])
 
-        #event checker
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-            if event.type == pygame.KEYDOWN:
-                if round_active:
-                    if event.key == pygame.K_z:
-                        player_sequence.append('z')
-                        press_sound.play()
-                    elif event.key == pygame.K_x:
-                        player_sequence.append('x')
-                        press_sound.play()
-                    elif event.key == pygame.K_c:
-                        player_sequence.append('c')
-                        press_sound.play()
-
-                    #check if players sequence matches
-                    if len(player_sequence) == len(dj_sequence):
-                        if check_player_input(dj_sequence, player_sequence):
-                            show_message = True
-                            message_text = "Correct!"
-                            score += 1
-                        else:
-                            show_message = True
-                            message_text = "Wrong!"
-                        round_active = False
-
-        #serato dance
-        if not round_active and not show_message:
+        #State Machine Logic
+        if current_check == GAME_START:
             dj_sequence = [random.choice(['z', 'x', 'c']) for _ in range(3)]
             show_sequence(dj_sequence)
-            player_sequence = []
-            round_active = True
+            index = 0
+            current_check = FIRST_CHECK
 
-        #game update result
+        elif current_check == FIRST_CHECK:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_z:
+                        player_input = 'z'
+                    elif event.key == pygame.K_x:
+                        player_input = 'x'
+                    elif event.key == pygame.K_c:
+                        player_input = 'c'
+                    if player_input == dj_sequence[0]:
+                        press_sound.play()
+                        current_check = SECOND_CHECK
+                    else:
+                        current_check = GAME_OVER
+
+        elif current_check == SECOND_CHECK:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_z:
+                        player_input = 'z'
+                    elif event.key == pygame.K_x:
+                        player_input = 'x'
+                    elif event.key == pygame.K_c:
+                        player_input = 'c'
+                    if player_input == dj_sequence[1]:
+                        press_sound.play()
+                        current_check = THIRD_CHECK
+                    else:
+                        current_check = GAME_OVER
+
+        elif current_check == THIRD_CHECK:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_z:
+                        player_input = 'z'
+                    elif event.key == pygame.K_x:
+                        player_input = 'x'
+                    elif event.key == pygame.K_c:
+                        player_input = 'c'
+                    if player_input == dj_sequence[2]:
+                        press_sound.play()
+                        current_check = ROUND_SUCCESS
+                    else:
+                        current_check = GAME_OVER
+
+        elif current_check == ROUND_SUCCESS:
+            show_message = True
+            message_text = "Correct!"
+            score += 1
+            current_check = GAME_START
+
+
+        elif current_check == GAME_OVER:
+            show_message = True
+            message_text = "Wrong! Game Over."
+            score = 0
+            current_check = GAME_START
+
+        #display messages
         if show_message:
             text_surface = font.render(message_text, True, WHITE)
             screen.blit(text_surface, (20, SCREEN_HEIGHT - 50))
@@ -182,12 +212,10 @@ def game_loop():
             pygame.time.wait(2000)
             show_message = False
 
-
         pygame.display.update()
         clock.tick(30)
 
     pygame.quit()
 
-
-#start
+# start the game loop
 game_loop()
